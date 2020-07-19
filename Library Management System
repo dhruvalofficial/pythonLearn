@@ -1,0 +1,242 @@
+# Libraby Management System with the facility of Individual User Profile and facility to add, rent, return, buy a book from library
+
+import shelve
+import random
+
+def basic():
+    """ Providing information about the available actions to user"""
+    print("\n\n\t\t Welcome to the DK library... to access this library you have to follow below information...\n")
+    print("\t Enter  -c  To create new user.\n"
+          "\t Enter  -l  To login your profile.\n"
+          "\t Enter  -d  To delete user profile\n"
+          "\t Enter  -e  To Exit this programme")
+    while True:
+        choice = ['c', 'd', 'l', 'e']
+        user_action = input("\n Enter your Action: ")
+        if user_action in choice:
+            break
+        else:
+            print("check your action, it must be from above available actions. try again..")
+    return user_action                                                        # this will return user action that what user want to do
+
+
+def checkname(username):
+    """checking validity of username"""
+    import shelve
+    value = "new"
+    d = shelve.open("libuser.db")
+    for i in d:
+        if i == username:
+            value = "inlist"
+    d.close()
+    return value                                                              # return that username is new or already in list
+
+
+def create():
+    """create a new user profile"""
+    import shelve
+    while True:
+        username = input("\t Enter Username: ")
+        checking_username = checkname(username)  # check validity of username using checkname function
+        if checking_username == "new":
+            password = input("\t Enter Password: ")
+            d = shelve.open("libuser.db")
+            d[username] = password
+            d.close()
+            print("User profile created successfully...")
+            return
+        else:
+            print("username already taken.. Try again..")
+            continue
+
+
+# Function to check file password
+def check(username, password):
+    """check for right password"""
+    import shelve
+    value = False
+    d = shelve.open("libuser.db")
+    for i, j in d.items():
+        if i == username and j == password:
+            value = True
+    d.close()
+    return value                                 # return true for correct password and false for wrong password.
+
+
+def login():
+    while True:
+        username = input("\t Enter Username: ")
+        if username == "m":
+            return "m"
+        checking_username = checkname(username)
+        if checking_username == "inlist":
+            password = input("\t Enter Password: ")
+            if check(username, password):
+                return username
+            else:
+                print("You have Entered a wrong password..")
+        else:
+            print("username not exist  /  you have entered wrong username.. try again.."
+                  "\n enter  -m to return in main menu")
+            
+
+# Function to delete user file
+def delete():
+    import shelve
+    logincheck = login()
+    booklist = shelve.open(bookfile)
+    cross_check = False
+    for key, value in booklist.items():
+        if logincheck in value[1]:
+            cross_check = True
+    if cross_check:
+        print("You have to return all the books you take on rent first..."
+              "\n only after that you can remove your profile")
+    else:
+        d = shelve.open("libuser.db")
+        del d[logincheck]
+        d.close()
+        print("user profile deleted successfully..\n")
+        
+
+# Library Management System
+
+def info():
+    """this function contain initial information of how to use programme"""
+    print("\n\n Follow as per the details to access the library without discomfort...")
+    print("press...\n"
+          "1    for view the available book list \n"
+          "2    for rent the book from library \n"
+          "3    for return book \n"
+          "4    to purchase a book from library\n"
+          "5    to add book in library\n"
+          "e    to exit from this database\n")
+
+
+def list_book():
+    """This function display the list of books in library with its availability"""
+    booklist = shelve.open(bookfile)
+    print(f"Unique.No{' ':<4} Status{' ':<9} Issue to:{' ':<10}    Name")
+    for i, i1 in booklist.items():
+        print(f" {i1[2]}.{' ':<6} {i1[0]:<17} {i1[1]:<20} {i}")
+    booklist.close()
+    
+
+def rent_book():
+    """This book issue the available book to the perticular user who want to rent this and also update the book list"""
+    bookname = input("\nEnter the unique code. of the book you want to rent from library : ")
+    booklist = shelve.open(bookfile)
+    cross_check = False
+    key1 = ""
+    val = ""
+    for key, value in booklist.items():
+        if bookname in value[2] and value[0] == "Available":
+            cross_check = True
+            key1 = key
+            val = value[2]
+    if cross_check:
+        booklist[key1] = ["issued", user, val]
+        print("Book issued successfully....")
+        booklist.close()
+    else:
+        print("you have entered a wrong  unique code..or book is already issued"
+              "\n kindly check from list and try again..")
+        
+
+def return_book():
+    """This function will return the issue book and update the status in book list"""
+    bookname = input("\nEnter the unique code. of the book you want to return to library : ")
+    booklist = shelve.open(bookfile)
+    cross_check = False
+    key1 = ""
+    val = ""
+    for key, value in booklist.items():
+        if bookname in value[2] and user == value[1]:
+            cross_check = True
+            key1 = key
+            val = value[2]
+    if cross_check:
+        booklist[key1] = ["Available", " ", val]
+        booklist.close()
+        print("Book Returned Successfully.....")
+    else:
+        print("you have entered a wrong  unique code.. or only user to whom book is issue can return book."
+              "\n kindly check from list and try again..")
+        
+
+def add_book():
+    """This function will add the new book in the library list"""
+    bookname = input("\nEnter the name of the book you want to add in library : ")
+    booklist = shelve.open(bookfile)
+    j = random.randint(1000, 9999)
+    booklist[bookname] = ["Available", " ", str(j)]
+    booklist.close()
+    print("Book Added Successfully...")
+    
+
+def buy_book():
+    """This function will delete a book from booklist"""
+    bookname = input("\nEnter the unique code. of the book you want to buy from library: ")
+    booklist = shelve.open(bookfile)
+    cross_check = False
+    key1 = ""
+    for key, value in booklist.items():
+        if bookname in value[2] and value[0] == "Available":
+            cross_check = True
+            key1 = key
+    if cross_check:
+        del booklist[key1]
+        booklist.close()
+        print(" You have successfully purchase this book.. enjoy this book..\n")
+    else:
+        print("you have entered a wrong  unique code../ book is issued, try when its Available"
+              "\n kindly check from list and try again..")
+        
+
+def library_frame():
+    while True:
+        info()
+        user1 = str(input("\nWhat you want to do : ")).lower()
+        if user1 == "e":
+            break
+
+        if user1 == "1":
+            list_book()
+        elif user1 == "2":
+            rent_book()
+        elif user1 == "3":
+            return_book()
+        elif user1 == "4":
+            buy_book()
+        elif user1 == "5":
+            add_book()
+
+        user_r = input("\n Do you want to continue  ? (y/n)  :")
+        if user_r.lower() == "y":
+            continue
+        elif user_r.lower() == "n":
+            print("Thank you for using library management system " + user)
+            break
+        else:
+            print("you have enter wrong selection....program is re-running by default")
+            
+
+# PROGRAM STARTS FROM HERE......................................................
+
+if __name__ == '__main__':
+    bookfile = "library_book_list.db"
+
+    while True:
+        ua = basic()
+        if ua == "e":
+            break
+        elif ua == "c":
+            create()
+        elif ua == "l":
+            user = login()
+            if user == "m":
+                continue
+            else:
+                library_frame()
+        elif ua == "d":
+            delete()
